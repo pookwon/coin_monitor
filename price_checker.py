@@ -93,7 +93,7 @@ def priceCheck():
                 desc = "🚀" if diff_price > 0 else "😭"
 
                 # alert
-                message = f'{name} {desc} [{diff_time:%H:%M}] {cur_price}원 -> {trade_price}원 {diff_price}원 {percent * 100:0.2f}%'
+                message = f'{name} {desc} [{cur_time:%H:%M}] {cur_price}원 -> {trade_price}원 {diff_price}원 {percent * 100:0.2f}%'
                 SendMessage(message)
                 print(message)
                 last_alert_time = datetime.datetime.now()
