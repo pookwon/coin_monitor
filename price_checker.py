@@ -5,7 +5,8 @@ import datetime
 import math
 import numpy as np
 import threading
-from telegram_api import SendMessage
+from telegram_api import TelegramBotApi
+import argparse
 
 # ripple
 target_markget = "KRW-XRP"
@@ -60,9 +61,7 @@ def GetCurrentPrice(market):
 
     return cur_time, result[0]["trade_price"]
 
-
-
-def priceCheck():
+def priceCheck(token):
     global last_alert_time
     global total_minutes
     global alert_percent
@@ -72,7 +71,9 @@ def priceCheck():
     cur_time, cur_price = GetCurrentPrice(target_markget)
 
     #print(mins_datas)
-    print(f'{cur_time.strftime("%H:%M:%S")} {cur_price}')
+    #print(f'{cur_time.strftime("%H:%M:%S")} {cur_price}')
+
+    api = TelegramBotApi(token)
 
     for item in mins_datas:
         item_time = datetime.datetime.fromtimestamp(item["timestamp"]/1000)
@@ -94,7 +95,7 @@ def priceCheck():
 
                 # alert
                 message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price}원 -> {cur_price}원 {diff_price:0}원 {percent * 100:0.2f}%'
-                SendMessage(message)
+                api.SendMessage(message)                
                 print(message)
                 last_alert_time = datetime.datetime.now()
             
@@ -104,11 +105,17 @@ def priceCheck():
 
     #print(price_volumes)
 
-def priceCheckTimer():
-    priceCheck()
-    timer = threading.Timer(check_interval, priceCheckTimer)
+def priceCheckTimer(token):
+    priceCheck(token)
+    timer = threading.Timer(check_interval, priceCheckTimer, token)
     timer.start()
     
 
-# start
-priceCheckTimer()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='debug test')
+    parser.add_argument('--token')
+
+    args = parser.parse_args()
+
+    # start
+    priceCheckTimer(args.token)

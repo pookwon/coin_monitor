@@ -1,30 +1,99 @@
 import requests
+import argparse
+import pickle
+import os
 
 # telegram bot api test
-base_url = "https://api.telegram.org/bot1640815585:AAHancwBwckiHtRFTc2g78akroVDYTtU1E4"
-sendmessage_path = "/sendMessage"
-getUpdates_path = "/getUpdates"
 
-#url = "https://api.telegram.org/bot1640815585:AAHancwBwckiHtRFTc2g78akroVDYTtU1E4/getUpdates"
+class TelegramBotApi:
 
-def GetChatIdList():
-    url = base_url + getUpdates_path
-    response = requests.request("GET", url)
-    updates = response.json()
+    tele_token = ''
+    base_url = "https://api.telegram.org"
+    sendmessage_path = "sendMessage"
+    getUpdates_path = "getUpdates"
+    debug = False
 
-    idlist = set()
-    for msg in updates["result"]:
-        idlist.add(msg["message"]["chat"]["id"])
-    
-    return idlist
+    chatIdList = set()
+    chatIdListPath = './chatids.txt'
 
-def SendMessage(text):
-    #make query string
-    chatids = GetChatIdList()
-    for id in chatids:
+    def __init__(self, token, debug=False) -> None:
+        self.tele_token = token
+        self.debug = debug
+
+    def GetChatIdList(self):
+        url = f"{self.base_url}/{self.tele_token}/{self.getUpdates_path}"
+        print(url)
+        #querystring = {"offset":-1}
+        response = requests.request("GET", url)
+        updates = response.json()
+
+        if self.debug:
+            print(updates)
+
+        idlist = set()
+        for msg in updates["result"]:
+            idlist.add(msg["message"]["chat"]["id"])
+        
+        return idlist
+
+    def LoadChatIds(self):
+        if not os.path.exists(self.chatIdListPath):
+            return set()
+            
+        with open(self.chatIdListPath, 'rb') as f:
+            data = pickle.load(f)
+            return data
+
+    def SaveChatIds(ids):
+        with open(self.chatIdListPath, 'wb') as f:
+            data = pickle.dump(ids, f)
+
+
+    def SendMessageId(self, id, text):
         querystring = {"chat_id":id,"text":text}
-        url = base_url + sendmessage_path
+        url = f"{self.base_url}/{self.tele_token}/{self.sendmessage_path}"
         response = requests.request("GET", url, params=querystring)
+
+        if self.debug:
+            print(response.json())
+
         if response.status_code == 200:
             print('SendMessage is successed')
-            print(response.json())
+
+    def SendMessage(self, text):
+        self.chatIdList = self.LoadChatIds()
+
+        #make query string
+        chatids = self.GetChatIdList()
+        chatids.update(self.chatIdList)
+
+        self.SaveChatIds(chatids)
+
+        for id in chatids:
+            querystring = {"chat_id":id,"text":text}
+            url = f"{self.base_url}/{self.tele_token}/{self.sendmessage_path}"
+            response = requests.request("GET", url, params=querystring)
+
+            if self.debug:
+                print(response.json())
+
+            if response.status_code == 200:
+                print('SendMessage is successed')
+
+if __name__ == "__main__":    
+    parser = argparse.ArgumentParser(description='debug test')
+    parser.add_argument('--token')
+    parser.add_argument('--msg')
+    parser.add_argument('--id')
+    parser.add_argument('--getids', type=bool, default=False)
+    parser.add_argument('--debug', type=bool, default=False)
+
+    args = parser.parse_args()
+    api = TelegramBotApi(args.token, debug=args.debug)
+
+    if args.getids:
+        print(api.GetChatIdList())
+    elif args.id is not None:
+        api.SendMessageId(args.id, args.msg)
+    else:
+        api.SendMessage(args.msg)
