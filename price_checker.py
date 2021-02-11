@@ -10,7 +10,7 @@ import argparse
 
 # ripple
 target_markget = ["KRW-XRP", "KRW-EOS"]
-condition = {"duration":5, "gap":0.01}
+condition = {"duration":10, "gap":0.01}
 check_interval = 15
 alert_min_interval = 20
 last_alert_time = datetime.datetime.now()
