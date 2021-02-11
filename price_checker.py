@@ -15,7 +15,7 @@ check_interval = 15
 alert_percent = 0.01
 alert_min_interval = 20
 last_alert_time = datetime.datetime.now()
-
+token = ''
 market_names = None
 def GetMarketName(name):
     global market_names
@@ -61,11 +61,12 @@ def GetCurrentPrice(market):
 
     return cur_time, result[0]["trade_price"]
 
-def priceCheck(token):
+def priceCheck():
     global last_alert_time
     global total_minutes
     global alert_percent
     global alert_min_interval
+    global token
 
     mins_datas = GetMinutesData(target_markget, total_minutes)
     cur_time, cur_price = GetCurrentPrice(target_markget)
@@ -105,17 +106,18 @@ def priceCheck(token):
 
     #print(price_volumes)
 
-def priceCheckTimer(token):
-    priceCheck(token)
-    timer = threading.Timer(check_interval, priceCheckTimer, token)
+def priceCheckTimer():
+    priceCheck()
+    timer = threading.Timer(check_interval, priceCheckTimer)
     timer.start()
     
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='debug test')
-    parser.add_argument('--token')
+    parser.add_argument('--token', type=str)
 
     args = parser.parse_args()
 
     # start
-    priceCheckTimer(args.token)
+    token = args.token
+    priceCheckTimer()
