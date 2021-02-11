@@ -9,14 +9,15 @@ from telegram_api import TelegramBotApi
 import argparse
 
 # ripple
-target_markget = "KRW-XRP"
-total_minutes = 10
+target_markget = ["KRW-XRP", "KRW-EOS"]
+condition = {"duration":5, "gap":0.01}
 check_interval = 15
-alert_percent = 0.01
 alert_min_interval = 20
 last_alert_time = datetime.datetime.now()
 token = ''
+debug = False
 market_names = None
+
 def GetMarketName(name):
     global market_names
     if market_names is None:
@@ -63,48 +64,56 @@ def GetCurrentPrice(market):
 
 def priceCheck():
     global last_alert_time
-    global total_minutes
-    global alert_percent
     global alert_min_interval
     global token
+    global debug
+    global condition
 
-    mins_datas = GetMinutesData(target_markget, total_minutes)
-    cur_time, cur_price = GetCurrentPrice(target_markget)
+    for market in target_markget:
+        mins_datas = GetMinutesData(market, condition["duration"])
+        cur_time, cur_price = GetCurrentPrice(market)
 
-    #print(mins_datas)
-    #print(f'{cur_time.strftime("%H:%M:%S")} {cur_price}')
+        if debug:
+            #print(f'{cur_time.strftime("%H:%M:%S")} {market}={cur_price}')
+            print(mins_datas)
 
-    api = TelegramBotApi(token)
+        
 
-    for item in mins_datas:
-        item_time = datetime.datetime.fromtimestamp(item["timestamp"]/1000)
-        diff_time = cur_time - item_time
-        if diff_time.total_seconds() < 59:
-            continue
+        api = TelegramBotApi(token)
 
-        trade_price = item["trade_price"]
-        diff_price = cur_price - trade_price
+        for item in mins_datas:
+            item_time = datetime.datetime.fromtimestamp(item["timestamp"]/1000)
+            diff_time = cur_time - item_time
+            if diff_time.total_seconds() < 59:
+                continue
 
-        percent = math.fabs(diff_price) / trade_price
+            trade_price = item["trade_price"]
+            diff_price = cur_price - trade_price
 
-        if percent > alert_percent:
-            # check last alert time
-            interval = cur_time - last_alert_time
-            if (interval.total_seconds() / 60) > alert_min_interval:
-                name = GetMarketName(target_markget)
-                desc = "🚀" if diff_price > 0 else "😭"
+            percent = math.fabs(diff_price) / trade_price
 
-                # alert
-                message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price}원 -> {cur_price}원 {diff_price:0}원 {percent * 100:0.2f}%'
-                api.SendMessage(message)                
-                print(message)
-                last_alert_time = datetime.datetime.now()
+            if percent > condition["gap"]:
+                # check last alert time
+                interval = datetime.datetime.now() - last_alert_time
+                if (interval.total_seconds() / 60) > alert_min_interval:
+                    name = GetMarketName(market)
+                    desc = "🚀" if diff_price > 0 else "😭"
+
+                    # alert
+                    message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price}원 -> {cur_price}원 {diff_price:0}원 {percent * 100:0.2f}%'
+                    if debug == False:
+                        api.SendMessage(message)
+
+                    if debug:
+                        print(message)
+
+                    last_alert_time = datetime.datetime.now()
+                break
             
-            break
+            if debug:
+                print(market, item["candle_date_time_kst"], cur_time.strftime("%m/%d %H:%M:%S"), item["trade_price"], item["candle_acc_trade_volume"])
 
-        #print(i, item["candle_date_time_kst"], cur_time.strftime("%m/%d %H:%M:%S"), gap, item["trade_price"], gap / item["trade_price"] * 100, item["candle_acc_trade_volume"])
-
-    #print(price_volumes)
+        #print(price_volumes)
 
 def priceCheckTimer():
     priceCheck()
@@ -115,9 +124,11 @@ def priceCheckTimer():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='debug test')
     parser.add_argument('--token', type=str)
+    parser.add_argument('--debug', type=bool, default=False)
 
     args = parser.parse_args()
 
     # start
     token = args.token
+    debug = args.debug
     priceCheckTimer()
