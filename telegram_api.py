@@ -44,7 +44,7 @@ class TelegramBotApi:
             data = pickle.load(f)
             return data
 
-    def SaveChatIds(ids):
+    def SaveChatIds(self, ids):
         with open(self.chatIdListPath, 'wb') as f:
             data = pickle.dump(ids, f)
 
