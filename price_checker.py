@@ -12,11 +12,11 @@ import argparse
 target_markget = ["KRW-XRP", "KRW-EOS"]
 condition = {"duration":10, "gap":0.01}
 check_interval = 15
-alert_min_interval = 20
-last_alert_time = datetime.datetime.now()
+alert_min_interval = 15
 token = ''
 debug = False
 market_names = None
+last_alert_market = {}
 
 def GetMarketName(name):
     global market_names
@@ -63,7 +63,7 @@ def GetCurrentPrice(market):
     return cur_time, result[0]["trade_price"]
 
 def priceCheck():
-    global last_alert_time
+    global last_alert_market
     global alert_min_interval
     global token
     global debug
@@ -76,8 +76,6 @@ def priceCheck():
         if debug:
             #print(f'{cur_time.strftime("%H:%M:%S")} {market}={cur_price}')
             print(mins_datas)
-
-        
 
         api = TelegramBotApi(token)
 
@@ -94,6 +92,7 @@ def priceCheck():
 
             if percent > condition["gap"]:
                 # check last alert time
+                last_alert_time = last_alert_market[market]
                 interval = datetime.datetime.now() - last_alert_time
                 if (interval.total_seconds() / 60) > alert_min_interval:
                     name = GetMarketName(market)
@@ -107,7 +106,7 @@ def priceCheck():
                     if debug:
                         print(message)
 
-                    last_alert_time = datetime.datetime.now()
+                    last_alert_market[market] = datetime.datetime.now()
                 break
             
             if debug:
@@ -131,4 +130,8 @@ if __name__ == "__main__":
     # start
     token = args.token
     debug = args.debug
+
+    for market in target_markget:
+        last_alert_market[market] = datetime.datetime.now()
+
     priceCheckTimer()
