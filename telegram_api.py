@@ -21,16 +21,21 @@ class TelegramBotApi:
         self.debug = debug
 
     def GetChatIdList(self):
+        idlist = set()
+
         url = f"{self.base_url}/{self.tele_token}/{self.getUpdates_path}"
         print(url)
         #querystring = {"offset":-1}
         response = requests.request("GET", url)
+        if response.status_code != 200:
+            print('GetChatIdList error', response)
+            return idlist
+
         updates = response.json()
 
         if self.debug:
             print(updates)
-
-        idlist = set()
+        
         for msg in updates["result"]:
             idlist.add(msg["message"]["chat"]["id"])
         
