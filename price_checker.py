@@ -11,8 +11,8 @@ import argparse
 # ripple
 target_markget = ["KRW-XRP", "KRW-EOS"]
 condition = {"duration":10, "gap":0.01}
-check_interval = 15
-alert_min_interval = 15
+check_interval = 30
+alert_min_interval = 20
 token = ''
 debug = False
 market_names = None
