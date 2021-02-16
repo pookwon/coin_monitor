@@ -93,11 +93,11 @@ def priceCheck():
             
             trade_price = item["trade_price"]
             gap = cur_price - trade_price
-            percent = gap / trade_price
+            percent = gap / trade_price * 100
 
             volume = item["candle_acc_trade_volume"]
             gap_volume_multiple = volume / prev_volume
-            diff_score = (gap if gap > 0.0 else 0.1) + (gap_volume_multiple / volume_factor)
+            diff_score = (percent if gap > 0.0 else 0.1) + (gap_volume_multiple / volume_factor)
 
             # update volume
             prev_volume = item["candle_acc_trade_volume"]
@@ -112,9 +112,9 @@ def priceCheck():
                     desc = "🚀" if gap > 0 else "😭"
 
                     # alert
-                    message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent * 100:0.2f}%'
+                    message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
                     if market == 'KRW-WAXP':
-                        message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price}원 -> {cur_price}원 {gap}원 {percent * 100:0.2f}%'
+                        message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price}원 -> {cur_price}원 {gap}원 {percent:0.2f}%'
 
                     if debug == False:
                         api.SendMessage(message)
