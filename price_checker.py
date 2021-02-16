@@ -99,8 +99,14 @@ def priceCheck():
             gap_volume_multiple = volume / prev_volume
             diff_score = (percent if gap > 0.0 else 0.1) + (gap_volume_multiple / volume_factor)
 
+            if debug:
+                print(f'{item["candle_date_time_kst"]} gap:{gap}, price:{item["trade_price"]:1.2f}, {percent:0.1f}%, {gap_volume_multiple:0.2f}, {diff_score:0.2f}')
+
             # update volume
             prev_volume = item["candle_acc_trade_volume"]
+
+            if gap == 0.0:
+                continue
 
             if diff_score > alert_factor[market]:
 
