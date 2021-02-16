@@ -8,10 +8,12 @@ import threading
 from telegram_api import TelegramBotApi
 import argparse
 
-# ripple
-target_markget = ["KRW-XRP", "KRW-EOS"]
-condition = {"duration":10, "gap":0.01}
-check_interval = 30
+# ripple, eos, wax
+target_markget = ["KRW-XRP", "KRW-EOS", "KRW-WAXP"]
+duration = 7
+volume_factor = 3
+alert_factor = { "KRW-XRP":7.0, "KRW-EOS":2.0, "KRW-WAXP":3.0 }
+check_interval = 60
 alert_min_interval = 20
 token = ''
 debug = False
@@ -67,10 +69,12 @@ def priceCheck():
     global alert_min_interval
     global token
     global debug
-    global condition
+    global duration
+    global volume_factor
+    global alert_factor
 
     for market in target_markget:
-        mins_datas = GetMinutesData(market, condition["duration"])
+        mins_datas = GetMinutesData(market, duration)
         cur_time, cur_price = GetCurrentPrice(market)
 
         if debug:
@@ -78,28 +82,40 @@ def priceCheck():
             print(mins_datas)
 
         api = TelegramBotApi(token)
-
+        prev_volume = 0
         for item in mins_datas:
-            item_time = datetime.datetime.fromtimestamp(item["timestamp"]/1000)
-            diff_time = cur_time - item_time
-            if diff_time.total_seconds() < 59:
+            if prev_volume == 0:
+                prev_volume = item["candle_acc_trade_volume"]
                 continue
 
+            item_time = datetime.datetime.fromtimestamp(item["timestamp"]/1000)
+            diff_time = cur_time - item_time
+            
             trade_price = item["trade_price"]
-            diff_price = cur_price - trade_price
+            gap = cur_price - trade_price
+            percent = gap / trade_price
 
-            percent = math.fabs(diff_price) / trade_price
+            volume = item["candle_acc_trade_volume"]
+            gap_volume_multiple = volume / prev_volume
+            diff_score = (gap if gap > 0.0 else 0.1) + (gap_volume_multiple / volume_factor)
 
-            if percent > condition["gap"]:
+            # update volume
+            prev_volume = item["candle_acc_trade_volume"]
+
+            if diff_score > alert_factor[market]:
+
                 # check last alert time
                 last_alert_time = last_alert_market[market]
                 interval = datetime.datetime.now() - last_alert_time
                 if (interval.total_seconds() / 60) > alert_min_interval:
                     name = GetMarketName(market)
-                    desc = "🚀" if diff_price > 0 else "😭"
+                    desc = "🚀" if gap > 0 else "😭"
 
                     # alert
-                    message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price}원 -> {cur_price}원 {diff_price:0}원 {percent * 100:0.2f}%'
+                    message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent * 100:0.2f}%'
+                    if market == 'KRW-WAXP':
+                        message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price}원 -> {cur_price}원 {gap}원 {percent * 100:0.2f}%'
+
                     if debug == False:
                         api.SendMessage(message)
 
