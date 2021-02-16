@@ -10,9 +10,10 @@ import argparse
 
 # ripple, eos, wax
 target_markget = ["KRW-XRP", "KRW-EOS", "KRW-WAXP"]
-duration = 7
-volume_factor = 3
-alert_factor = { "KRW-XRP":7.0, "KRW-EOS":2.0, "KRW-WAXP":3.0 }
+duration = 20
+check_duration = 5
+volume_factor = 5
+alert_factor = { "KRW-XRP":3.0, "KRW-EOS":3.0, "KRW-WAXP":4.0 }
 check_interval = 60
 alert_min_interval = 20
 token = ''
@@ -82,11 +83,19 @@ def priceCheck():
             print(mins_datas)
 
         api = TelegramBotApi(token)
-        prev_volume = 0
+
+        # get volume avg
+        volumes = []
         for item in mins_datas:
-            if prev_volume == 0:
-                prev_volume = item["candle_acc_trade_volume"]
-                continue
+            volumes.append(item["candle_acc_trade_volume"])
+        volume_avg = np.average(np.array(volumes))
+
+        index = -1
+        for item in mins_datas:
+            index += 1
+
+            if check_duration < index:
+                break
 
             item_time = datetime.datetime.fromtimestamp(item["timestamp"]/1000)
             diff_time = cur_time - item_time
@@ -96,11 +105,11 @@ def priceCheck():
             percent = gap / trade_price * 100
 
             volume = item["candle_acc_trade_volume"]
-            gap_volume_multiple = volume / prev_volume
-            diff_score = (percent if gap > 0.0 else 0.1) + (gap_volume_multiple / volume_factor)
+            gap_volume_multiple = volume / volume_avg
+            diff_score = (percent * 5 if gap > 0.0 else 0.001) + (gap_volume_multiple / volume_factor)
 
             if debug:
-                print(f'{item["candle_date_time_kst"]} gap:{gap}, price:{item["trade_price"]:1.2f}, {percent:0.1f}%, {gap_volume_multiple:0.2f}, {diff_score:0.2f}')
+                print(f'{item["candle_date_time_kst"]} gap:{gap:1.2f}, price:{item["trade_price"]:1.2f}, {percent:0.1f}%, {gap_volume_multiple:0.2f}, {diff_score:0.2f}')
 
             # update volume
             prev_volume = item["candle_acc_trade_volume"]
@@ -117,10 +126,13 @@ def priceCheck():
                     name = GetMarketName(market)
                     desc = "🚀" if gap > 0 else "😭"
 
+                    # get prev 5
+                    price_before5min = mins_datas[index + 5]["trade_price"]
+
                     # alert
-                    message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
+                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전 시세:{price_before5min}원, {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
                     if market == 'KRW-WAXP':
-                        message = f'{name} {desc} [{cur_time:%H:%M}] {trade_price}원 -> {cur_price}원 {gap}원 {percent:0.2f}%'
+                        message = f'{name} {desc} [{cur_time:%H:%M}] 5분전 시세:{price_before5min}원, {trade_price:1.2f}원 -> {cur_price:1.2f}원 {gap:1.2f}원 {percent:0.2f}%'
 
                     if debug == False:
                         api.SendMessage(message)
