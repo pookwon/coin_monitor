@@ -106,7 +106,7 @@ def priceCheck():
 
             volume = item["candle_acc_trade_volume"]
             gap_volume_multiple = volume / volume_avg
-            diff_score = (percent * 5 if gap > 0.0 else 0.001) + (gap_volume_multiple / volume_factor)
+            diff_score = (math.fabs(percent * 5) if gap > 0.0 else 0.001) + (gap_volume_multiple / volume_factor)
 
             if debug:
                 print(f'{item["candle_date_time_kst"]} gap:{gap:1.2f}, price:{item["trade_price"]:1.2f}, {percent:0.1f}%, {gap_volume_multiple:0.2f}, {diff_score:0.2f}')
@@ -130,9 +130,9 @@ def priceCheck():
                     price_before5min = mins_datas[index + 5]["trade_price"]
 
                     # alert
-                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전 시세:{price_before5min}원, {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
+                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min}원, {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
                     if market == 'KRW-WAXP':
-                        message = f'{name} {desc} [{cur_time:%H:%M}] 5분전 시세:{price_before5min}원, {trade_price:1.2f}원 -> {cur_price:1.2f}원 {gap:1.2f}원 {percent:0.2f}%'
+                        message = f'{name} {desc} [{cur_time:%H:%M}] 5분전{price_before5min}원, {trade_price:1.2f}원 -> {cur_price:1.2f}원 {gap:1.2f}원 {percent:0.2f}%'
 
                     if debug == False:
                         api.SendMessage(message)
