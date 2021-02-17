@@ -10,12 +10,12 @@ import argparse
 
 # ripple, eos, wax
 target_markget = ["KRW-XRP", "KRW-EOS", "KRW-WAXP"]
-duration = 20
-check_duration = 5
+duration = 60
+check_duration = 6
 volume_factor = 5
-alert_factor = { "KRW-XRP":3.0, "KRW-EOS":3.0, "KRW-WAXP":4.0 }
+alert_factor = { "KRW-XRP":3.5, "KRW-EOS":3.5, "KRW-WAXP":4.5 }
 check_interval = 60
-alert_min_interval = 20
+alert_min_interval = 30
 token = ''
 debug = False
 market_names = None
@@ -78,9 +78,9 @@ def priceCheck():
         mins_datas = GetMinutesData(market, duration)
         cur_time, cur_price = GetCurrentPrice(market)
 
-        if debug:
+        #if debug:
             #print(f'{cur_time.strftime("%H:%M:%S")} {market}={cur_price}')
-            print(mins_datas)
+        #    print(mins_datas)
 
         api = TelegramBotApi(token)
 
@@ -106,10 +106,10 @@ def priceCheck():
 
             volume = item["candle_acc_trade_volume"]
             gap_volume_multiple = volume / volume_avg
-            diff_score = (math.fabs(percent * 5) if gap > 0.0 else 0.001) + (gap_volume_multiple / volume_factor)
+            diff_score = (math.fabs(percent) * 5) + (gap_volume_multiple / volume_factor)
 
             if debug:
-                print(f'{item["candle_date_time_kst"]} gap:{gap:1.2f}, price:{item["trade_price"]:1.2f}, {percent:0.1f}%, {gap_volume_multiple:0.2f}, {diff_score:0.2f}')
+                print(f'{item["candle_date_time_kst"]} gap:{gap:1.2f}, price:{item["trade_price"]:1.2f}, {percent:0.1f}%, {gap:1.2f}, {gap_volume_multiple:0.2f}, {diff_score:0.2f}')
 
             # update volume
             prev_volume = item["candle_acc_trade_volume"]
