@@ -9,11 +9,12 @@ from telegram_api import TelegramBotApi
 import argparse
 
 # ripple, eos, wax
-target_markget = ["KRW-XRP", "KRW-EOS", "KRW-WAXP"]
+#target_markget = ["KRW-XRP", "KRW-EOS", "KRW-WAXP"]
+target_markget = ["KRW-XRP", "KRW-EOS", "KRW-BTC"]
 duration = 60
 check_duration = 6
 volume_factor = 5
-alert_factor = { "KRW-XRP":3.5, "KRW-EOS":3.5, "KRW-WAXP":4.5 }
+alert_factor = { "KRW-XRP":3.5, "KRW-EOS":3.5, "KRW-BTC":3.0 }
 check_interval = 60
 alert_min_interval = 30
 token = ''
@@ -132,7 +133,7 @@ def priceCheck():
                     # alert
                     message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min}원, {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
                     if market == 'KRW-WAXP':
-                        message = f'{name} {desc} [{cur_time:%H:%M}] 5분전{price_before5min}원, {trade_price:1.2f}원 -> {cur_price:1.2f}원 {gap:1.2f}원 {percent:0.2f}%'
+                        message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min}원, {trade_price:1.2f}원 -> {cur_price:1.2f}원 {gap:1.2f}원 {percent:0.2f}%'
 
                     if debug == False:
                         api.SendMessage(message)
