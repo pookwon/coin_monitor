@@ -15,7 +15,7 @@ target_markget = ["KRW-XRP", "KRW-EOS", "KRW-BTC"]
 duration = 60
 check_duration = 6
 volume_factor = 5
-alert_factor = { "KRW-XRP":3.5, "KRW-EOS":3.5, "KRW-BTC":3.0 }
+alert_factor = { "KRW-XRP":4.0, "KRW-EOS":4.0, "KRW-BTC":3.0 }
 check_interval = 60
 alert_min_interval = 30
 token = ''
@@ -173,6 +173,6 @@ if __name__ == "__main__":
     debug = args.debug
 
     for market in target_markget:
-        last_alert_market[market] = datetime.datetime.now()
+        last_alert_market[market] = datetime.datetime.now() - datetime.timedelta(minutes=30)
 
     priceCheckTimer()
