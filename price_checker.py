@@ -2,6 +2,7 @@
 import requests
 import json
 import datetime
+import time
 import math
 import numpy as np
 import threading
@@ -76,6 +77,16 @@ def priceCheck():
     global alert_factor
 
     for market in target_markget:
+
+        # check last alert time
+        last_alert_time = last_alert_market[market]
+        interval = datetime.datetime.now() - last_alert_time
+
+        if (interval.total_seconds() / 60) < alert_min_interval:
+            continue
+
+        time.sleep(5)
+
         mins_datas = GetMinutesData(market, duration)
         cur_time, cur_price = GetCurrentPrice(market)
 
@@ -119,29 +130,24 @@ def priceCheck():
                 continue
 
             if diff_score > alert_factor[market]:
+                name = GetMarketName(market)
+                desc = "🚀" if gap > 0 else "😭"
 
-                # check last alert time
-                last_alert_time = last_alert_market[market]
-                interval = datetime.datetime.now() - last_alert_time
-                if (interval.total_seconds() / 60) > alert_min_interval:
-                    name = GetMarketName(market)
-                    desc = "🚀" if gap > 0 else "😭"
+                # get prev 5
+                price_before5min = mins_datas[index + 5]["trade_price"]
 
-                    # get prev 5
-                    price_before5min = mins_datas[index + 5]["trade_price"]
+                # alert
+                message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min}원, {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
+                if market == 'KRW-WAXP':
+                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min}원, {trade_price:1.2f}원 -> {cur_price:1.2f}원 {gap:1.2f}원 {percent:0.2f}%'
 
-                    # alert
-                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min}원, {trade_price:1.0f}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
-                    if market == 'KRW-WAXP':
-                        message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min}원, {trade_price:1.2f}원 -> {cur_price:1.2f}원 {gap:1.2f}원 {percent:0.2f}%'
+                if debug == False:
+                    api.SendMessage(message)
 
-                    if debug == False:
-                        api.SendMessage(message)
+                if debug:
+                    print(message)
 
-                    if debug:
-                        print(message)
-
-                    last_alert_market[market] = datetime.datetime.now()
+                last_alert_market[market] = datetime.datetime.now()
                 break
             
             if debug:
