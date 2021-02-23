@@ -137,7 +137,7 @@ def priceCheck():
                 price_before5min = mins_datas[index + 5]["trade_price"]
 
                 # alert
-                message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min:,}원, {trade_price:,}원 -> {cur_price:1.0f}원 {gap:1.0f}원 {percent:0.2f}%'
+                message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{int(price_before5min):,}원, {int(trade_price):,}원 -> {int(cur_price):,}원 {int(gap):,}원 {percent:0.2f}%'
 
                 if debug == False:
                     api.SendMessage(message)
