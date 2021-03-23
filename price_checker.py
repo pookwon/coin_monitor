@@ -18,7 +18,9 @@ volume_factor = 5
 alert_factor = { "KRW-XRP":4.5, "KRW-EOS":4.5, "KRW-BTC":3.5, "KRW-BORA":5 }
 check_interval = 60
 alert_min_interval = 30
+
 token = ''
+line_token = None
 debug = False
 market_names = None
 last_alert_market = {}
@@ -39,6 +41,14 @@ def GetMarketName(name):
 
     return None
 
+def NotifyToLine(message, token):
+    url = 'https://notify-api.line.me/api/notify'
+    headers = {'Authorization': 'Bearer ' + token}
+    datas = {'message': message }
+    response = requests.post(url, headers=headers, data=datas)
+    if response.status_code == 200:
+        return True
+    return False
 
 def GetMinutesData(market, count=20):
     url = "https://api.upbit.com/v1/candles/minutes/1"
@@ -71,11 +81,12 @@ def priceCheck():
     global last_alert_market
     global alert_min_interval
     global token
+    global line_token
     global debug
     global duration
     global volume_factor
     global alert_factor
-
+    
     for market in target_markget:
 
         # check last alert time
@@ -145,6 +156,9 @@ def priceCheck():
                 if debug:
                     print(message)
 
+                if line_token is not None:
+                    NotifyToLine(message, line_token)
+
                 last_alert_market[market] = datetime.datetime.now()
                 break
             
@@ -162,12 +176,14 @@ def priceCheckTimer():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='debug test')
     parser.add_argument('--token', type=str)
+    parser.add_argument('--line_token', type=str, default=None)
     parser.add_argument('--debug', type=bool, default=False)
 
     args = parser.parse_args()
 
     # start
     token = args.token
+    line_token = args.line_token
     debug = args.debug
 
     for market in target_markget:
