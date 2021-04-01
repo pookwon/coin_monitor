@@ -148,7 +148,10 @@ def priceCheck():
                 price_before5min = mins_datas[index + 5]["trade_price"]
 
                 # alert
-                message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{int(price_before5min):,}원, {int(trade_price):,}원 -> {int(cur_price):,}원 {int(gap):,}원 {percent:0.2f}%'
+                if market == "KRW-BTT":
+                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{int(price_before5min):0.2f}원, {int(trade_price):0.2f}원 -> {int(cur_price):0.2f}원 {int(gap):0.2f}원 {percent:0.2f}%'
+                else:
+                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{int(price_before5min):,}원, {int(trade_price):,}원 -> {int(cur_price):,}원 {int(gap):,}원 {percent:0.2f}%'
 
                 if debug == False:
                     api.SendMessage(message)
