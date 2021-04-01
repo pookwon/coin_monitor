@@ -149,7 +149,7 @@ def priceCheck():
 
                 # alert
                 if market == "KRW-BTT":
-                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{int(price_before5min):0.2f}원, {int(trade_price):0.2f}원 -> {int(cur_price):0.2f}원 {int(gap):0.2f}원 {percent:0.2f}%'
+                    message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{price_before5min:0.2f}원, {trade_price:0.2f}원 -> {cur_price:0.2f}원 {gap:0.2f}원 {percent:0.2f}%'
                 else:
                     message = f'{name} {desc} [{cur_time:%H:%M}] 5분전:{int(price_before5min):,}원, {int(trade_price):,}원 -> {int(cur_price):,}원 {int(gap):,}원 {percent:0.2f}%'
 
