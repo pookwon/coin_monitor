@@ -11,11 +11,11 @@ import argparse
 
 # ripple, eos, wax
 #target_markget = ["KRW-XRP", "KRW-EOS", "KRW-WAXP"]
-target_markget = ["KRW-XRP", "KRW-EOS", "KRW-BTC", "KRW-BORA", "KRW-BTT"]
+target_markget = ["KRW-XRP", "KRW-EOS", "KRW-BTC", "KRW-BORA"]
 duration = 60
 check_duration = 6
 volume_factor = 5
-alert_factor = { "KRW-XRP":4.5, "KRW-EOS":4.5, "KRW-BTC":3.5, "KRW-BORA":5, "KRW-BTT":5 }
+alert_factor = { "KRW-XRP":4.5, "KRW-EOS":4.5, "KRW-BTC":3.5, "KRW-BORA":5}
 check_interval = 60
 alert_min_interval = 30
 
